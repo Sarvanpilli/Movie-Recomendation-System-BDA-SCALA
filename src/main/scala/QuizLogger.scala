@@ -1,12 +1,9 @@
-import java.io.{FileWriter, PrintWriter, File}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import scala.io.Source
 import scala.util.{Try, Using}
+import MongoDBConnection._
 
 object QuizLogger {
-  val csvFile = "quiz_responses.csv"
-
   def logResponse(
     question: TriviaQuestion,
     userAnswer: String,
@@ -15,23 +12,19 @@ object QuizLogger {
     val questionType = question.langType
     val questionText = question.question
     val isCorrect = compareAnswer(question, userAnswer)
-    val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+    val timestamp = LocalDateTime.now()
     
-    // Escape quotes in the question text and answers
-    val escapedQuestion = questionText.replace("\"", "\"\"")
-    val escapedUserAnswer = userAnswer.replace("\"", "\"\"")
-    val escapedCorrectAnswer = correctAnswer.replace("\"", "\"\"")
-
-    val csvLine = s""""$escapedQuestion",$questionType,"$escapedUserAnswer","$escapedCorrectAnswer",$isCorrect,$timestamp"""
-
-    // Append the line to the CSV file
-    val writer = new PrintWriter(new FileWriter(csvFile, true))
-    try {
-      writer.println(csvLine)
-    } finally {
-      writer.close()
-    }
+    // Log to MongoDB
+    insertQuizResponse(
+      question = questionText,
+      questionType = questionType,
+      userAnswer = userAnswer,
+      correctAnswer = correctAnswer,
+      isCorrect = isCorrect,
+      answeredAt = timestamp
+    )
   }
+
   def compareAnswer(question: TriviaQuestion, userAnswer: String): Boolean = {
     val similarityThreshold = 0.25 // Adjust this threshold as needed
     
@@ -43,7 +36,6 @@ object QuizLogger {
     
     (answerSimilarity >= similarityThreshold)     
   }
-
 
   private def answerSimilarityScore(userAnswer: String, correctAnswer: String, correctIndex: Int): Double = {
     val normalizedUser = userAnswer.trim.toLowerCase
@@ -115,34 +107,17 @@ object QuizLogger {
   }
 
   def getQuizHistory(): List[QuizResponse] = {
-    if (!new File(csvFile).exists()) {
-      return Nil
+    val responses = getAllQuizResponses()
+    responses.map { doc =>
+      QuizResponse(
+        question = doc.getString("question"),
+        questionType = doc.getString("type"),
+        userAnswer = doc.getString("user_answer"),
+        correctAnswer = doc.getString("correct_answer"),
+        isCorrect = doc.getBoolean("is_correct"),
+        answeredAt = LocalDateTime.parse(doc.getString("answered_at"))
+      )
     }
-
-    Using(Source.fromFile(csvFile)) { source =>
-      source.getLines().drop(1) // Skip header row
-        .map { line =>
-          // Split on commas, but respect quoted fields
-          val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")
-          
-          // Remove quotes and unescape doubled quotes
-          val question = fields(0).replaceAll("^\"|\"$", "").replace("\"\"", "\"")
-          val questionType = fields(1)
-          val userAnswer = fields(2).replaceAll("^\"|\"$", "").replace("\"\"", "\"")
-          val correctAnswer = fields(3).replaceAll("^\"|\"$", "").replace("\"\"", "\"")
-          val isCorrect = fields(4).toBoolean
-          val timestamp = LocalDateTime.parse(fields(5), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-          QuizResponse(
-            question = question,
-            questionType = questionType,
-            userAnswer = userAnswer,
-            correctAnswer = correctAnswer,
-            isCorrect = isCorrect,
-            answeredAt = timestamp
-          )
-        }.toList
-    }.getOrElse(Nil)
   }
 }
 

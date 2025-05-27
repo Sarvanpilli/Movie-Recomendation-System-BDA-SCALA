@@ -11,7 +11,9 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "org.scalameta" %% "munit" % "1.0.0" % Test,
       "com.github.tototoshi" %% "scala-csv" % "1.3.10",
-      "com.typesafe.play" %% "play-json" % "2.10.0-RC7"
+      "com.typesafe.play" %% "play-json" % "2.10.0-RC7",
+      "org.mongodb" % "mongodb-driver-sync" % "4.11.1",
+      "org.mongodb" % "bson" % "4.11.1"
     )
 
   )

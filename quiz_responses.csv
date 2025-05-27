@@ -16,3 +16,6 @@ question,type,user_answer,correct_answer,is_correct,answered_at
 "Who directed 'Pulp Fiction'?",englishmovies,"i think quentin tarantino","Quentin Tarantino",true,2025-05-16 14:38:56
 "Who played the lead role in the popular Egyptian series 'Grand Hotel'?",arabictvshows,"amr yousssf","Amr Youssef",true,2025-05-16 14:39:18
 "Which movie features the character 'Gandalf'?",englishmovies,"number two ?","The Lord of the Rings",false,2025-05-16 14:39:43
+"What was Omar Sharif's first Egyptian film?",arabicmovies,"1","The Blazing Sun",true,2025-05-22 19:35:09
+"Which actress starred in the film 'One-Zero'?",arabicmovies,"2","Elham Shahin",false,2025-05-22 19:35:21
+"What is the name of the fictional African country in 'Black Panther'?",englishmovies,"2","Wakanda",true,2025-05-22 19:42:50
